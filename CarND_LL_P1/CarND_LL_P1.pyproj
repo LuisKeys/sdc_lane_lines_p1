@@ -24,6 +24,21 @@
   <ItemGroup>
     <Compile Include="main.py" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="test_videos\" />
+    <Folder Include="test_images\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="test_videos\challenge.mp4" />
+    <Content Include="test_videos\solidWhiteRight.mp4" />
+    <Content Include="test_videos\solidYellowLeft.mp4" />
+    <Content Include="test_images\solidWhiteCurve.jpg" />
+    <Content Include="test_images\solidWhiteRight.jpg" />
+    <Content Include="test_images\solidYellowCurve.jpg" />
+    <Content Include="test_images\solidYellowCurve2.jpg" />
+    <Content Include="test_images\solidYellowLeft.jpg" />
+    <Content Include="test_images\whiteCarLaneSwitch.jpg" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
