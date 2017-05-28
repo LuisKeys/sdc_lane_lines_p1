@@ -4,16 +4,16 @@ import matplotlib.image as mpimg
 import numpy as np
 import math
 import cv2
+import os
 
 #Basic Flow:
 #a) Read media (image or video)
 #b) Process media
 #   1) Turn Image to Gray Scale single channel
 #   2) Mask the region of interest (set everything else to black)
-#   3) Apply Canny algorithm to get borders gradient
-#   4) Apply some blur (Gaussian) to the previous image so make it softer
+#   3) Apply some blur (Gaussian) to the previous image so make it softer
+#   4) Apply Canny algorithm to get borders gradient
 #   5) Apply Hough transformation to get lines
-#   6) Merge lines with just to lines for left and right lane
 #c) Output media (image or video with the resulting lines on top)
 
 
@@ -60,8 +60,53 @@ def region_of_interest(img, vertices):
     masked_image = cv2.bitwise_and(img, mask)
     return masked_image
 
+def get_top_of_interest(img):
+    """
+    `img` the image to be processed.
+        
+    Returns the y coordinate of the region of interest.
+    """
+    return img.shape[0] * 0.60
 
-def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
+def get_bottom_of_interest(img):
+    """
+    `img` the image to be processed.
+        
+    Returns the y coordinate of the region of interest.
+    """
+    return img.shape[0]
+
+def get_poly_of_interest(img):
+    """
+    `img` the image to be processed.
+        
+    Returns the vertices of a poly based on image size.
+    """
+
+    height = img.shape[0]
+    width = img.shape[1]
+
+    top = get_top_of_interest(img)
+    top_width = 50
+    top_left_x = width / 2 - 12 - top_width / 2
+    top_right_x = width / 2 + top_width / 2
+    vertices = np.array([[(0,height),(top_left_x, top), (top_right_x, top), (width,height)]], dtype=np.int32)
+    return vertices
+
+def get_horiz_center_of_interest(img):
+    """
+    `img` the image to be processed.
+        
+    Returns the x coord of the center of the area of interest.
+    """
+
+    vertices = get_poly_of_interest(img)
+    top_left_x = vertices[0][1][0]
+    top_right_x = vertices[0][2][0]
+
+    return (top_left_x + top_right_x) / 2
+
+def draw_lines(img, lines, color=[255, 0, 0], thickness=4):
     """
     NOTE: this is the function you might want to use as a starting point once you want to 
     average/extrapolate the line segments you detect to map out the full
@@ -78,20 +123,58 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
     If you want to make the lines semi-transparent, think about combining
     this function with the weighted_img() function below
     """
+    
+    #The center of the region of interest is used to split
+    #left and right lane lines
+    center_x = get_horiz_center_of_interest(img)
+    
+    #These y coordintates are handy to extrapolate lane lines
+    y_top_of_interest = get_top_of_interest(img)
+    y_bottom_of_interest = get_bottom_of_interest(img)
+
+    min_left_m = 1000000
+    max_right_m = -1000000
+
     for line in lines:
         for x1,y1,x2,y2 in line:
-            cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+            #avoid horizontal lines
+            if y1 != y2:
+                m = (y2-y1)/(x2-x1)
+                #left lines
+                if x1 < center_x:
+                    if m < min_left_m:
+                        min_left_m = m
 
-def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
+                #right lines
+                if x1 > center_x:
+                    if m > max_right_m:
+                        max_right_m = m
+
+    for line in lines:
+        for x1,y1,x2,y2 in line:
+            #avoid horizontal lines
+            if y1 != y2:
+                m = (y2-y1)/(x2-x1)
+                b = y2 - m * x2
+                x_top = int((y_top_of_interest - b) / m)
+                x_bottom = int((y_bottom_of_interest - b) / m)
+                #left lines
+                if m == min_left_m:
+                    cv2.line(img, (x_top, int(y_top_of_interest)), (x_bottom, int(y_bottom_of_interest)), [255, 0, 0], thickness)
+
+                #right lines
+                if m == max_right_m:
+                    cv2.line(img, (x_top, int(y_top_of_interest)), (x_bottom, int(y_bottom_of_interest)), [0, 255, 0], thickness)
+
+def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap, original_img):
     """
     `img` should be the output of a Canny transform.
         
     Returns an image with hough lines drawn.
     """
     lines = cv2.HoughLinesP(img, rho, theta, threshold, np.array([]), minLineLength=min_line_len, maxLineGap=max_line_gap)
-    line_img = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-    draw_lines(line_img, lines)
-    return line_img
+    draw_lines(original_img, lines)
+    return original_img
 
 # Python 3 has support for cool math symbols.
 
@@ -110,22 +193,48 @@ def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
 #    return cv2.addWeighted(initial_img, ?, img, ?, ?)
 
 
-#test image section
-#a) Read media (image or video)
-test_image = mpimg.imread('test_images/solidWhiteRight.jpg')
+def process_image(img_path):
+    #test image section
+    #a) Read media (image or video)
+    image = mpimg.imread(img_path)
 
-#b) Process media
-#   1) Turn Image to Gray Scale single channel
-test_image = grayscale(test_image)
+    #b) Process media
+    #   1) Turn Image to Gray Scale single channel
+    test_image = grayscale(image)
 
-#   2) Mask the region of interest (set everything else to black)
-imshape = image.shape
-vertices = np.array([[(0,imshape[0]),(450, 290), (490, 290), (imshape[1],imshape[0])]], dtype=np.int32)
-test_image = region_of_interest(test_image, vertices)
+    #   2) Mask the region of interest (set everything else to black)
+    vertices = get_poly_of_interest(test_image)
+    test_image = region_of_interest(test_image, vertices)
 
-#   Show processed image
-plt.imshow(test_image, cmap="gray")
-plt.show()
+    #   3) Apply some blur (Gaussian) to the previous image so make it softer
+    kernel_size = 5 # Must be an odd number (3, 5, 7...)
+    test_image = cv2.GaussianBlur(test_image,(kernel_size, kernel_size),0)
+
+    #   4) Apply Canny algorithm to get borders gradient
+    mask = np.zeros_like(test_image)
+    low_threshold = 1
+    high_threshold = 180
+    test_image = canny(test_image, low_threshold, high_threshold)
+
+    #   5) Apply Hough transformation to get lines
+    rho = 2 # distance resolution in pixels of the Hough grid
+    theta = np.pi/180 # angular resolution in radians of the Hough grid
+    threshold = 15     # minimum number of votes (intersections in Hough grid cell)
+    min_line_length = 40 #minimum number of pixels making up a line
+    max_line_gap = 30    # maximum gap in pixels between connectable line segments
+    line_image = np.copy(test_image)*0 # creating a blank to draw lines on
+
+    return hough_lines(test_image, rho, theta, threshold, min_line_length, max_line_gap, image)
 
 
+#Main loop for images *************************************************************************
+
+images_path = "test_images/"
+for image_name in os.listdir(images_path):
+    processed_image = process_image(images_path + image_name)
+    mpimg.imsave(images_path + image_name + "_processed.png", processed_image)
+    #plt.imshow(test_image)
+    #plt.show()
+
+#Main loop ************************************************************************************
 
