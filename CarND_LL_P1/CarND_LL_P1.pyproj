@@ -25,6 +25,8 @@
     <Compile Include="main.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="test_videos_output\" />
+    <Folder Include="test_images_output\" />
     <Folder Include="test_videos\" />
     <Folder Include="test_images\" />
   </ItemGroup>

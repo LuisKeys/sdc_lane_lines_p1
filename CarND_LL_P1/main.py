@@ -5,6 +5,9 @@ import numpy as np
 import math
 import cv2
 import os
+from moviepy.editor import VideoFileClip
+from IPython.display import HTML
+
 
 #Basic Flow:
 #a) Read media (image or video)
@@ -138,7 +141,7 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=4):
     for line in lines:
         for x1,y1,x2,y2 in line:
             #avoid horizontal lines
-            if y1 != y2:
+            if y1 != y2 and x2 != x1:
                 m = (y2-y1)/(x2-x1)
                 #left lines
                 if x1 < center_x:
@@ -153,7 +156,7 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=4):
     for line in lines:
         for x1,y1,x2,y2 in line:
             #avoid horizontal lines
-            if y1 != y2:
+            if y1 != y2 and x2 != x1:
                 m = (y2-y1)/(x2-x1)
                 b = y2 - m * x2
                 x_top = int((y_top_of_interest - b) / m)
@@ -193,10 +196,8 @@ def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap, original
 #    return cv2.addWeighted(initial_img, ?, img, ?, ?)
 
 
-def process_image(img_path):
-    #test image section
-    #a) Read media (image or video)
-    image = mpimg.imread(img_path)
+def process_image(image):
+    #process image section
 
     #b) Process media
     #   1) Turn Image to Gray Scale single channel
@@ -228,13 +229,22 @@ def process_image(img_path):
 
 
 #Main loop for images *************************************************************************
+#images_path = "test_images/"
+#output_images_path = "test_images_output/"
+#for image_name in os.listdir(images_path):
+#    #a) Read media (image or video)
+#    image = mpimg.imread(images_path + image_name)
+#    processed_image = process_image(image)
+#    mpimg.imsave(output_images_path + image_name + "_processed.png", processed_image)
+#    #plt.imshow(test_image)
+#    #plt.show()
 
-images_path = "test_images/"
-for image_name in os.listdir(images_path):
-    processed_image = process_image(images_path + image_name)
-    mpimg.imsave(images_path + image_name + "_processed.png", processed_image)
-    #plt.imshow(test_image)
-    #plt.show()
-
-#Main loop ************************************************************************************
+#Main loop for videos *************************************************************************
+videos_path = "test_videos/"
+white_output = 'test_videos_output/'
+for video_name in os.listdir(videos_path):
+    #clip = VideoFileClip(videos_path + "solidWhiteRight.mp4").subclip(0,5)
+    clip = VideoFileClip(videos_path + video_name)
+    white_clip = clip.fl_image(process_image)
+    white_clip.write_videofile(white_output + video_name, audio=False)
 
