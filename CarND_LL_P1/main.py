@@ -68,7 +68,7 @@ def get_top_of_interest(img):
         
     Returns the y coordinate of the region of interest.
     """
-    return img.shape[0] * 0.60
+    return img.shape[0] * 0.61
 
 def get_bottom_of_interest(img):
     """
@@ -134,47 +134,132 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=4):
     #These y coordintates are handy to extrapolate lane lines
     y_top_of_interest = get_top_of_interest(img)
     y_bottom_of_interest = get_bottom_of_interest(img)
+    height = img.shape[0]
+    width = img.shape[1]
 
+    #min left and max right m to select best initial (seed) line 
     min_left_m = 1000000
     max_right_m = -1000000
+        
+    #top left and right coords
+    top_max_left_x = -1000000
+    min_left_y = 1000000
+    top_min_right_x = 1000000
+    min_right_y = 1000000
 
+    #top left and right coords
+    bottom_max_left_x = -1000000
+    max_left_y = -1000000
+    bottom_min_right_x = 1000000
+    max_right_y = -1000000
+
+    #Margins to eval points within the area of interest
+    left_margin = 0.05
+    right_margin = 0.95
+    top_margin = 0.76
+    bottom_margin = 0.90
+
+    #limits of m to avoid inestabilities
+    min_left_m_limit = -0.85
+    max_left_m_limit = -0.65
+
+    min_right_m_limit = 0.65
+    max_right_m_limit = 0.85
+
+    show_aux_markers = True
+    
+    #Walk through all lines
     for line in lines:
         for x1,y1,x2,y2 in line:
-            #avoid horizontal lines
-            if y1 != y2 and x2 != x1:
+            #avoid horizontal lines and lines out of region margins
+            if y1 != y2 and x2 != x1 and x1 > width *left_margin and x2 < width * right_margin:
                 m = (y2-y1)/(x2-x1)
 
                 #left lines
-                if x1 < center_x:
+                if x1 < center_x and x2 < center_x:
                     if m < min_left_m:
                         min_left_m = m
+                    if y1 < height * bottom_margin:
+                        if x1 > top_max_left_x:
+                            top_max_left_x = x1
+                            min_left_y = y1
+                    if y2 < height * bottom_margin:
+                        if x2 > top_max_left_x:
+                            top_max_left_x = x2
+                            min_left_y = y2
+                    if y1 < height * bottom_margin and y1 > height * top_margin:
+                        if x1 > bottom_max_left_x:
+                            bottom_max_left_x = x1
+                            max_left_y = y1
+                    if y2 < height * bottom_margin and y2 > height * top_margin:
+                        if x2 > bottom_max_left_x:
+                            bottom_max_left_x = x2
+                            max_left_y = y2
 
                 #right lines
-                if x1 > center_x:
+                if x1 > center_x and x2 > center_x:
                     if m > max_right_m:
                         max_right_m = m
+                    if y1 < height * bottom_margin:
+                        if x1 < top_min_right_x:
+                            top_min_right_x = x1
+                            min_right_y = y1
+                    if y2 < height * bottom_margin:
+                        if x2 < top_min_right_x:
+                            top_min_right_x = x2
+                            min_right_y = y2
+                    if y1 < height * bottom_margin and y1 > height * top_margin:
+                        if x1 < bottom_min_right_x:
+                            bottom_min_right_x = x1
+                            max_right_y = y1
+                    if y2 < height * bottom_margin and y2 > height * top_margin:
+                        if x2 < bottom_min_right_x:
+                            bottom_min_right_x = x2
+                            max_right_y = y2
 
     #Write m of lane lines for all the frames for further analysis
-    white_output = 'test_videos_output/'
-    f = open( white_output + 'lane_m_values.txt', 'a' )
-    f.write( str(min_left_m) + "," + str(max_right_m) + '\n' )
-    f.close()
+    #white_output = 'test_videos_output/'
+    #f = open( white_output + 'lane_m_values.txt', 'a' )
+    #f.write( str(min_left_m) + "," + str(max_right_m) + '\n' )
+    #f.close()
 
-    for line in lines:
-        for x1,y1,x2,y2 in line:
-            #avoid horizontal lines
-            if y1 != y2 and x2 != x1:
-                m = (y2-y1)/(x2-x1)
-                b = y2 - m * x2
-                x_top = int((y_top_of_interest - b) / m)
-                x_bottom = int((y_bottom_of_interest - b) / m)
-                #left lines
-                if m == min_left_m:
-                    cv2.line(img, (x_top, int(y_top_of_interest)), (x_bottom, int(y_bottom_of_interest)), [255, 0, 0], thickness)
+    #auxiliary markers, handy to debug / fine tune
+    if show_aux_markers:
+        cv2.line(img, (top_max_left_x, min_left_y), (top_max_left_x, min_left_y), [0, 255, 255], thickness)
+        cv2.line(img, (top_min_right_x, min_right_y), (top_min_right_x, min_right_y), [0, 255, 255], thickness)
+        cv2.line(img, (bottom_max_left_x, max_left_y), (bottom_max_left_x, max_left_y), [0, 255, 255], thickness)
+        cv2.line(img, (bottom_min_right_x, max_right_y), (bottom_min_right_x, max_right_y), [0, 255, 255], thickness)
+        cv2.line(img, (int(center_x), int(y_top_of_interest)), (int(center_x), int(y_bottom_of_interest)), [0, 0, 255], thickness)
+        cv2.line(img, (0, int(top_margin * height)), (width, int(top_margin * height)), [0, 0, 255], 1)
+        cv2.line(img, (0, int(bottom_margin * height)), (width, int(bottom_margin * height)), [0, 0, 255], 1)
 
-                #right lines
-                if m == max_right_m:
-                    cv2.line(img, (x_top, int(y_top_of_interest)), (x_bottom, int(y_bottom_of_interest)), [0, 255, 0], thickness)
+        #left lines
+        m = (min_left_y - max_left_y) / (top_max_left_x - bottom_max_left_x)
+
+        if m > max_left_m_limit: 
+            m = max_left_m_limit
+        if m < min_left_m_limit: 
+            m = min_left_m_limit
+
+        b = min_left_y - m * top_max_left_x
+        x_top = int((y_top_of_interest - b) / m)
+        x_bottom = int((y_bottom_of_interest - b) / m)
+        cv2.line(img, (x_top, int(y_top_of_interest)), (x_bottom, int(y_bottom_of_interest)), [255, 0, 0], thickness)
+
+        #right lines
+        m = (min_right_y - max_right_y) / (top_min_right_x - bottom_min_right_x)
+
+        if m > max_right_m_limit: 
+            m = max_right_m_limit
+        if m < min_right_m_limit: 
+            m = min_right_m_limit
+        if math.isnan(m):
+            m = min_right_m_limit
+
+        b = min_right_y - m * top_min_right_x
+        x_top = int((y_top_of_interest - b) / m)
+        x_bottom = int((y_bottom_of_interest - b) / m)
+        cv2.line(img, (x_top, int(y_top_of_interest)), (x_bottom, int(y_bottom_of_interest)), [0, 255, 0], thickness)
 
 def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap, original_img):
     """
@@ -250,8 +335,8 @@ videos_path = "test_videos/"
 white_output = 'test_videos_output/'
 for video_name in os.listdir(videos_path):
 
-    clip = VideoFileClip(videos_path + video_name).subclip(0,2)
-    #clip = VideoFileClip(videos_path + video_name)
+    #clip = VideoFileClip(videos_path + video_name).subclip(0,2)
+    clip = VideoFileClip(videos_path + video_name)
     white_clip = clip.fl_image(process_image)
     white_clip.write_videofile(white_output + video_name, audio=False)
     pass
