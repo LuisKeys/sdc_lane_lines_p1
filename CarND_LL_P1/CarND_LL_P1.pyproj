@@ -40,6 +40,12 @@
     <Content Include="examples\P1_example.mp4" />
     <Content Include="examples\raw-lines-example.mp4" />
     <Content Include="P1.ipynb" />
+    <Content Include="test_images_output\solidWhiteCurve.jpg_processed.png" />
+    <Content Include="test_images_output\solidWhiteRight.jpg_processed.png" />
+    <Content Include="test_images_output\solidYellowCurve.jpg_processed.png" />
+    <Content Include="test_images_output\solidYellowCurve2.jpg_processed.png" />
+    <Content Include="test_images_output\solidYellowLeft.jpg_processed.png" />
+    <Content Include="test_images_output\whiteCarLaneSwitch.jpg_processed.png" />
     <Content Include="test_videos\challenge.mp4" />
     <Content Include="test_videos\solidWhiteRight.mp4" />
     <Content Include="test_videos\solidYellowLeft.mp4" />
