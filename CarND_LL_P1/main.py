@@ -5,8 +5,8 @@ import numpy as np
 import math
 import cv2
 import os
-from moviepy.editor import VideoFileClip
-from IPython.display import HTML
+#from moviepy.editor import VideoFileClip
+#from IPython.display import HTML
 
 
 #Basic Flow:
@@ -233,20 +233,24 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=4):
         cv2.line(img, (0, int(top_margin * height)), (width, int(top_margin * height)), [0, 0, 255], 1)
         cv2.line(img, (0, int(bottom_margin * height)), (width, int(bottom_margin * height)), [0, 0, 255], 1)
 
-        #left lines
+    #left lines
+    if min_left_y != max_left_y and top_max_left_x != bottom_max_left_x:
         m = (min_left_y - max_left_y) / (top_max_left_x - bottom_max_left_x)
 
         if m > max_left_m_limit: 
             m = max_left_m_limit
         if m < min_left_m_limit: 
             m = min_left_m_limit
+        if math.isnan(m):
+            m = min_right_m_limit
 
         b = min_left_y - m * top_max_left_x
         x_top = int((y_top_of_interest - b) / m)
         x_bottom = int((y_bottom_of_interest - b) / m)
         cv2.line(img, (x_top, int(y_top_of_interest)), (x_bottom, int(y_bottom_of_interest)), [255, 0, 0], thickness)
 
-        #right lines
+    #right lines
+    if min_right_y != max_right_y and top_min_right_x != bottom_min_right_x:
         m = (min_right_y - max_right_y) / (top_min_right_x - bottom_min_right_x)
 
         if m > max_right_m_limit: 
@@ -331,13 +335,13 @@ for image_name in os.listdir(images_path):
     mpimg.imsave(output_images_path + image_name + "_processed.png", processed_image)
 
 #Main loop for videos *************************************************************************
-videos_path = "test_videos/"
-white_output = 'test_videos_output/'
-for video_name in os.listdir(videos_path):
+#videos_path = "test_videos/"
+#white_output = 'test_videos_output/'
+#for video_name in os.listdir(videos_path):
 
-    #clip = VideoFileClip(videos_path + video_name).subclip(0,2)
-    clip = VideoFileClip(videos_path + video_name)
-    white_clip = clip.fl_image(process_image)
-    white_clip.write_videofile(white_output + video_name, audio=False)
-    pass
+#    #clip = VideoFileClip(videos_path + video_name).subclip(0,2)
+#    clip = VideoFileClip(videos_path + video_name)
+#    white_clip = clip.fl_image(process_image)
+#    white_clip.write_videofile(white_output + video_name, audio=False)
+#    pass
 
