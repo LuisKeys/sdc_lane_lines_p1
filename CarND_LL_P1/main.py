@@ -1,4 +1,4 @@
-#importing section
+#imports section
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
@@ -18,7 +18,6 @@ from IPython.display import HTML
 #   4) Apply Canny algorithm to get borders gradient
 #   5) Apply Hough transformation to get lines
 #c) Output media (image or video with the resulting lines on top)
-
 
 #functions section
 def grayscale(img):
@@ -90,10 +89,11 @@ def get_poly_of_interest(img):
     width = img.shape[1]
 
     top = get_top_of_interest(img)
-    top_width = 50
-    top_left_x = width / 2 - 12 - top_width / 2
+    top_width = 0.052 * width
+    top_left_x = width / 2 - width * 0.0125 - top_width / 2
     top_right_x = width / 2 + top_width / 2
-    vertices = np.array([[(0,height),(top_left_x, top), (top_right_x, top), (width,height)]], dtype=np.int32)
+    bottom_y = height * 0.9
+    vertices = np.array([[(0,bottom_y),(top_left_x, top), (top_right_x, top), (width,bottom_y)]], dtype=np.int32)
     return vertices
 
 def get_horiz_center_of_interest(img):
@@ -143,6 +143,7 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=4):
             #avoid horizontal lines
             if y1 != y2 and x2 != x1:
                 m = (y2-y1)/(x2-x1)
+
                 #left lines
                 if x1 < center_x:
                     if m < min_left_m:
@@ -152,6 +153,12 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=4):
                 if x1 > center_x:
                     if m > max_right_m:
                         max_right_m = m
+
+    #Write m of lane lines for all the frames for further analysis
+    white_output = 'test_videos_output/'
+    f = open( white_output + 'lane_m_values.txt', 'a' )
+    f.write( str(min_left_m) + "," + str(max_right_m) + '\n' )
+    f.close()
 
     for line in lines:
         for x1,y1,x2,y2 in line:
@@ -229,22 +236,23 @@ def process_image(image):
 
 
 #Main loop for images *************************************************************************
-#images_path = "test_images/"
-#output_images_path = "test_images_output/"
-#for image_name in os.listdir(images_path):
-#    #a) Read media (image or video)
-#    image = mpimg.imread(images_path + image_name)
-#    processed_image = process_image(image)
-#    mpimg.imsave(output_images_path + image_name + "_processed.png", processed_image)
-#    #plt.imshow(test_image)
-#    #plt.show()
+images_path = "test_images/"
+output_images_path = "test_images_output/"
+for image_name in os.listdir(images_path):
+    
+    #a) Read media (image or video)
+    image = mpimg.imread(images_path + image_name)
+    processed_image = process_image(image)
+    mpimg.imsave(output_images_path + image_name + "_processed.png", processed_image)
 
-#Main loop for videos *************************************************************************
+##Main loop for videos *************************************************************************
 videos_path = "test_videos/"
 white_output = 'test_videos_output/'
 for video_name in os.listdir(videos_path):
-    #clip = VideoFileClip(videos_path + "solidWhiteRight.mp4").subclip(0,5)
-    clip = VideoFileClip(videos_path + video_name)
+
+    clip = VideoFileClip(videos_path + video_name).subclip(0,2)
+    #clip = VideoFileClip(videos_path + video_name)
     white_clip = clip.fl_image(process_image)
     white_clip.write_videofile(white_output + video_name, audio=False)
+    pass
 
