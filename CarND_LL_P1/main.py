@@ -5,8 +5,8 @@ import numpy as np
 import math
 import cv2
 import os
-#from moviepy.editor import VideoFileClip
-#from IPython.display import HTML
+from moviepy.editor import VideoFileClip
+from IPython.display import HTML
 
 
 #Basic Flow:
@@ -335,13 +335,13 @@ for image_name in os.listdir(images_path):
     mpimg.imsave(output_images_path + image_name + "_processed.png", processed_image)
 
 #Main loop for videos *************************************************************************
-#videos_path = "test_videos/"
-#white_output = 'test_videos_output/'
-#for video_name in os.listdir(videos_path):
+videos_path = "test_videos/"
+white_output = 'test_videos_output/'
+for video_name in os.listdir(videos_path):
 
-#    #clip = VideoFileClip(videos_path + video_name).subclip(0,2)
-#    clip = VideoFileClip(videos_path + video_name)
-#    white_clip = clip.fl_image(process_image)
-#    white_clip.write_videofile(white_output + video_name, audio=False)
-#    pass
+    #clip = VideoFileClip(videos_path + video_name).subclip(0,2)
+    clip = VideoFileClip(videos_path + video_name)
+    white_clip = clip.fl_image(process_image)
+    white_clip.write_videofile(white_output + video_name, audio=False)
+    pass
 
