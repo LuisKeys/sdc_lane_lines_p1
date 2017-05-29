@@ -166,7 +166,7 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=4):
     min_right_m_limit = 0.65
     max_right_m_limit = 0.85
 
-    show_aux_markers = True
+    show_aux_markers = False
     
     #Walk through all lines
     for line in lines:
@@ -330,7 +330,7 @@ for image_name in os.listdir(images_path):
     processed_image = process_image(image)
     mpimg.imsave(output_images_path + image_name + "_processed.png", processed_image)
 
-##Main loop for videos *************************************************************************
+#Main loop for videos *************************************************************************
 videos_path = "test_videos/"
 white_output = 'test_videos_output/'
 for video_name in os.listdir(videos_path):

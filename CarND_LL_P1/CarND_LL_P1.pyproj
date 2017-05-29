@@ -25,12 +25,21 @@
     <Compile Include="main.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include=".ipynb_checkpoints\" />
+    <Folder Include="examples\" />
     <Folder Include="test_videos_output\" />
     <Folder Include="test_images_output\" />
     <Folder Include="test_videos\" />
     <Folder Include="test_images\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".ipynb_checkpoints\P1-checkpoint.ipynb" />
+    <Content Include="examples\grayscale.jpg" />
+    <Content Include="examples\laneLines_thirdPass.jpg" />
+    <Content Include="examples\line-segments-example.jpg" />
+    <Content Include="examples\P1_example.mp4" />
+    <Content Include="examples\raw-lines-example.mp4" />
+    <Content Include="P1.ipynb" />
     <Content Include="test_videos\challenge.mp4" />
     <Content Include="test_videos\solidWhiteRight.mp4" />
     <Content Include="test_videos\solidYellowLeft.mp4" />
